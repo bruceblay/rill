@@ -26,7 +26,7 @@ The data view shows the voice, key, mode, generation number, tempo, delay rhythm
 ## What it makes
 
 - **Seven timbres:** Bongo, Bars, Wood, Bells, Wire, Halo and Synth. These combine resonant modes, plucked tones, FM and filtered oscillators; they are interpretations, not exact hardware or acoustic-instrument emulations.
-- **Six phrase characters:** stepping stones, descending tumbles, orbiting anchors, conversations, suspended pairs and ripples. Interval palettes, twelve tonics, three modes, articulation, dynamics, rests and octave answers give each piece its own phrasing.
+- **Generated phrases:** six contour tendencies guide newly composed melodies, variable phrase spans, interval preferences and rhythms. Ideas develop through changed endings, rhythmic rephrasing, recalled fragments and new descendants. Sparse answering parts follow their own timing. Twelve tonics, three modes, four harmonic behaviors and gradual changes in activity give each piece its own phrasing.
 - **Evolving echoes:** two tempo-related taps, smooth or stepped feedback, occasional stronger repeat passages and intermittent smearing.
 - **Six visual families:** elastic creatures, moving cutouts, a landscape ring sculpture, drifting particles, folding tiles and reflected rays. Each shake selects a different family. Particles, tiles and reflections develop new arrangements over time.
 

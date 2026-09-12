@@ -34,7 +34,19 @@ class Engine {
   uint32_t rng;
   uint32_t performanceRng = 1;
   float phraseLevel = 1;
-  unsigned registerCell = 1, registerPhase = 0;
+  uint32_t scoreRng = 1;
+  uint32_t scoreRandom() { scoreRng ^= scoreRng << 13; scoreRng ^= scoreRng >> 17; scoreRng ^= scoreRng << 5; return scoreRng; }
+  float scoreUnit() { return float(scoreRandom() >> 8) / 16777216.0f; }
+  std::array<int8_t,16> original{}, answer{};
+  unsigned phraseTicks = 32, developAt = 2, activityAt = 4, harmonyAt = 3;
+  unsigned activity = 1, harmonyStyle = 0, harmonicRoot = 0, homeRoot = 0;
+  unsigned answerLength = 3, answerStep = 0, answerPeriod = 20;
+  unsigned developments = 0, answersPlayed = 0, harmonyChanges = 0;
+  int previousSupport = 60, lastLead = 72;
+  uint64_t nextAnswer = 0, lastLeadAt = 0;
+  float activityLevel = 1, activityTarget = 1;
+  unsigned phraseBeats = 8, preferredLeap = 1, landing = 0;
+  bool upward = true;
   float performanceUnit() {
     performanceRng ^= performanceRng << 13; performanceRng ^= performanceRng >> 17; performanceRng ^= performanceRng << 5;
     return float(performanceRng >> 8) / 16777216.0f;
@@ -46,7 +58,6 @@ class Engine {
   std::array<float, 16> accents{}, articulation{};
   std::array<uint8_t, 16> rhythm{};
   unsigned character = 0, intervalStyle = 0;
-  std::array<unsigned,5> voicing{{0,2,4,7,8}};
   unsigned family = 0, tonic = 2, mode = 0;
   int initialFamily = -1;
   float brightness = 0.48f, strike = 0.008f, overtoneLife = 0.4f;
@@ -55,7 +66,7 @@ class Engine {
   static constexpr uint32_t fadeFrames = rate / 3;
   unsigned lowestMidi = 127, highestMidi = 0;
   bool tonalViolation = false;
-  unsigned tempo = 72, delayMode = 0, generation = 0, harmonyOffset = 0;
+  unsigned tempo = 72, delayMode = 0, generation = 0;
   uint32_t tickSamples = rate * 30 / 72;
   // One 1.5-second mono delay. Fixed allocation keeps the audio task predictable.
   std::array<int16_t, 48000> echo{};
@@ -136,13 +147,10 @@ class Engine {
     mode = random() % 3;
     character = generation ? (character + 1 + random() % 5) % 6 : random() % 6;
     intervalStyle = random() % 3;
-    static const unsigned pools[3][5] = {{0,1,2,3,4},{0,3,4,7,10},{0,2,4,5,7}};
-    for (unsigned i=0;i<5;++i) voicing[i]=pools[intervalStyle][i];
     ++generation;
     tempo = 62 + random() % 35;
     tickSamples = 2 * uint32_t(std::lround(float(rate) * 15 / tempo));
-    phraseLength = (random() & 1) ? 16 : 12;
-    harmonyOffset = random() % 4;
+    phraseLength = 7 + random() % 10;
     phraseStep = phraseCount = 0;
     // Performance has its own stream, preserving the generated score and effects.
     performanceRng = (rng ^ 0xa341316cu) | 1u;
@@ -183,113 +191,184 @@ class Engine {
     smearNow=smearTarget=0;
     steppedFeedback=fxUnit()<0.5f;
     feedbackRng=fx|1u; feedbackBeat=UINT64_MAX; heldFeedback=feedback;
-    // Each character supplies a recognizable gesture and its own use of silence.
-    // Indices address a generated interval palette, not chromatic pitches.
-    static const int8_t motifs[6][8] = {
-      {0,-1,-1,2, 0,-1,4,-1}, // Stones: isolated recurring anchors
-      {4,3,2,-1, 3,2,1,-1},  // Tumble: descending gestures
-      {0,1,0,2, 0,3,0,-1},   // Orbit: neighbors around an anchor
-      {0,1,3,-1, 3,2,0,-1},  // Talk: call and answer
-      {0,-1,2,-1, 3,-1,1,-1},// Suspend: dyads separated by space
-      {0,1,2,-1, -1,-1,3,-1} // Ripple: a burst and its lingering answer
-    };
-    // Authored articulation follows each gesture independently of onset spacing.
-    static const float lengths[6][8] = {
-      {1.45f,1,1,0.55f, 0.80f,1,1.65f,1},
-      {0.55f,0.70f,1.45f,1, 0.65f,0.85f,1.65f,1},
-      {0.65f,1.25f,0.55f,1.50f, 0.75f,1.35f,0.60f,1},
-      {0.65f,0.85f,1.55f,1, 1.15f,0.55f,1.70f,1},
-      {1.65f,1,0.65f,1, 1.35f,1,0.85f,1},
-      {0.45f,0.60f,1.60f,1, 1,1,1.75f,1}
-    };
-    unsigned rotation=random()%2;
+    scoreRng = (rng ^ 0x51ed270bu) | 1u;
+    preferredLeap = 1 + intervalStyle;
+    landing = (scoreRandom()%3)*2;
+    upward = scoreRandom() & 1;
+    phraseBeats = 4 + scoreRandom()%7;
+    harmonicRoot = 0;
+    homeRoot = scoreRandom()%3;
+    harmonyStyle = scoreRandom()%4;
+    previousSupport = foldPitch(scaleNote(0,0),55,72);
+    lastLead = melodyPitch(0,landing);
+    lastLeadAt = clock;
+    activity = scoreRandom()%3;
+    activityTarget = activityLevel = activity == 0 ? 0.72f : 1.0f;
+    developAt = 2 + scoreRandom()%4;
+    activityAt = 3 + scoreRandom()%5;
+    harmonyAt = 2 + scoreRandom()%5;
+    developments = answersPlayed = harmonyChanges = 0;
+    answerPeriod = 4 * (5 + 2*(scoreRandom()%3)); // Five, seven or nine beats.
+    nextAnswer = clock + uint64_t(tickSamples/2)*(answerPeriod+3);
+    answerStep = 0;
+    composePhrase();
+    original = melody;
+    makeAnswer();
+  }
+  void composePhrase() {
+    int degree = upward ? 0 : 6;
+    for (unsigned i=0;i<phraseLength;++i) {
+      // A generated contour, with local steps and occasional characteristic leaps.
+      int direction = upward ? 1 : -1;
+      if (character==1) direction=-1;
+      if (character==2) direction=degree>int(landing) ? -1 : 1;
+      if (character==3 && i>=phraseLength/2) direction=-direction;
+      if (character==5 && i>phraseLength/3) direction=-direction;
+      if (scoreUnit()<0.24f) direction=-direction;
+      unsigned leap = scoreUnit()<0.72f ? 1 : preferredLeap+1;
+      degree=std::max(0,std::min(9,degree+direction*int(leap)));
+      if (character==0 && scoreUnit()<0.4f) degree=int(landing);
+      melody[i] = (i && i+1<phraseLength && scoreUnit()<0.18f) ? -1 : degree;
+    }
+    melody[phraseLength-1]=int8_t(landing);
+    composeRhythm();
+  }
+  void composeRhythm() {
+    // Distribute a chosen span among events; no repeated four-step rhythm cells.
+    phraseTicks=std::max(phraseLength+2,phraseBeats*4);
+    rhythm.fill(1);
+    for(unsigned remaining=phraseTicks-phraseLength;remaining;--remaining) {
+      unsigned i=scoreRandom()%phraseLength;
+      if(scoreUnit()<0.3f) i=phraseLength-1; // Give the ending room to breathe.
+      ++rhythm[i];
+    }
     for(unsigned i=0;i<phraseLength;++i) {
-      int d=motifs[character][i%8];
-      // A tiny transposition inside the palette preserves contour.
-      if(d>=0) d=std::min(4,d+int(rotation));
-      melody[i]=d;
-      accents[i]=i%4==0 ? 1.0f : 0.70f+unit()*0.22f;
-      articulation[i]=lengths[character][i%8]*(0.92f+unit()*0.16f);
-    }
-    registerCell=1+random()%(phraseLength/4-1);
-    registerPhase=random()%4;
-    for(unsigned cell=0;cell<phraseLength/4;++cell) {
-      unsigned shape=0;
-      if(character==0 || character==4) shape=4;
-      if(character==1) shape=1;
-      if(character==2) shape=cell%2 ? 2 : 0;
-      if(character==3) shape=cell%2 ? 4 : 3;
-      if(character==5) shape=cell%2 ? 4 : 1;
-      rhythmCell(cell,shape);
+      accents[i]=0.73f+scoreUnit()*0.22f;
+      if(i==0 || i+1==phraseLength) accents[i]=0.96f;
+      articulation[i]=0.5f+scoreUnit()*0.85f;
+      if(i+1==phraseLength) articulation[i]=1.3f+scoreUnit()*0.35f;
     }
   }
-  void rhythmCell(unsigned cell, unsigned shape) {
-    static const uint8_t cells[5][4] = {
-      {2,2,2,2}, {1,1,2,4}, {3,1,2,2}, {2,1,1,4}, {2,2,3,1}
-    };
-    for (unsigned i = 0; i < 4; ++i) rhythm[cell * 4 + i] = cells[shape][i];
+  void makeAnswer() {
+    answerLength=2+scoreRandom()%3;
+    for(unsigned i=0;i<answerLength;++i) {
+      int d=melody[(phraseLength-1-i)%phraseLength];
+      answer[i]=int8_t(d<0 ? landing : unsigned(d));
+    }
   }
-  void score() {
-    if (clock < nextTick) return;
-    static const unsigned paths[3][4] = {{0,5,3,4},{0,5,2,6},{0,3,1,4}};
-    unsigned chapter = (harmonyOffset + phraseCount / 4) % 4;
-    unsigned root = (character==0 || character==2 || character==4) ? paths[mode][harmonyOffset] : paths[mode][chapter];
-    if (phraseStep == 0)
-      phraseLevel = 0.5f * phraseLevel + 0.5f * (0.94f + 0.12f * performanceUnit());
-    unsigned elapsed = 0;
-    for (unsigned i = 0; i < phraseStep; ++i) elapsed += rhythm[i];
-    float position = float(elapsed) / (phraseLength * 2);
-    // A modest swell followed by release, measured in musical time, including rests.
-    float contour = 0.94f + 0.12f * (4 * position * (1 - position));
-    float expression = phraseLevel * contour;
-    if (phraseStep == 0 && phraseCount % 2 == 0)
-      note(foldPitch(scaleNote(root, 0),55,72), 2.8f, 0.025f, 2.775f, 0.075f * phraseLevel * touchVariation(), brightness * 0.65f);
-    int degree = melody[phraseStep];
-    if (degree >= 0) {
-      int pitch = melodyPitch(root,degree);
-      if(character==3 && (phraseStep/4)%2) pitch=foldPitch(pitch+12,72,91);
-      int octaveShift = 0;
-      unsigned registerCycle = (phraseCount + registerPhase) % 4;
-      if ((registerCycle == 1 || registerCycle == 2) &&
-          phraseStep / 4 == registerCell && phraseStep % 4 < 2) {
-        // Move a short answer together, rather than scatter independent notes.
-        int anchorDegree = melody[registerCell * 4];
-        if (anchorDegree < 0) anchorDegree = degree;
-        int anchor = melodyPitch(root,anchorDegree);
-        int candidate = pitch + (anchor <= 79 ? 12 : -12);
-        if (candidate >= 60 && candidate <= 91) { octaveShift = candidate - pitch; pitch = candidate; }
-      }
-      float registerGain = octaveShift > 0 ? 0.90f : 1.0f;
-      float duration = decaySeconds * (0.32f + 0.23f * rhythm[phraseStep])
-        * articulation[phraseStep] * (0.90f+0.20f*performanceUnit());
-      duration=std::max(0.16f,std::min(3.8f,duration));
-      float touch = rhythm[phraseStep] == 1 ? 0.88f : 1.0f;
-      if(character==4 && phraseStep%4==0) {
-        int partner=foldPitch(scaleNote(root+voicing[degree]+4,1),67,88);
-        note(partner,duration,strike,duration-strike,0.055f*expression*touchVariation(),brightness*.8f);
-      }
-      note(pitch, duration, strike,
-           duration - strike, 0.15f * accents[phraseStep] * touch * expression * touchVariation() * registerGain, brightness);
+  void developPhrase() {
+    // Change a whole musical idea, preserving some of its history.
+    unsigned operation=scoreRandom()%6;
+    if(operation==0) { // A changed ending, approaching the landing by step.
+      melody[phraseLength-2]=int8_t(std::min(9u,landing+1+scoreRandom()%2));
+      melody[phraseLength-1]=int8_t(landing);
+    } else if(operation==1) {
+      composeRhythm(); // Remember the pitches but change their delivery.
+    } else if(operation==2) {
+      int shift=scoreRandom()%2 ? 1 : -1;
+      for(unsigned i=1;i+1<phraseLength;++i)
+        if(melody[i]>=0) melody[i]=int8_t(std::max(0,std::min(9,int(melody[i])+shift)));
+    } else if(operation==3) {
+      // Promote the answer into the opening of the next phrase.
+      for(unsigned i=0;i<answerLength;++i) melody[i]=answer[i];
+      unsigned i=1+scoreRandom()%(phraseLength-2);
+      melody[i]=melody[i]<0 ? int8_t(landing) : -1;
+    } else if(operation==4) {
+      for(unsigned i=0;i<phraseLength/2;++i) melody[i]=original[i];
+      composeRhythm();
+    } else {
+      // An occasional new descendant, retaining the previous opening as a link.
+      int8_t opening=melody[0];
+      composePhrase(); melody[0]=opening;
+      original=melody;
     }
-    if (phraseStep == phraseLength / 2 && phraseCount % 3 == 2)
-      note(foldPitch(scaleNote(root + 2, 2),76,91), 1.3f, strike, 1.3f - strike, 0.032f * expression * touchVariation(), brightness * 0.6f);
-    nextTick += (tickSamples / 2) * rhythm[phraseStep];
-    if (++phraseStep == phraseLength) {
-      phraseStep = 0;
-      ++phraseCount;
-      // Preserve identity while allowing a small change every four phrases.
-      if (phraseCount % 4 == 0) {
-        unsigned index = 1 + random() % (phraseLength - 2);
-        // Change an existing phrase ending gently; do not fill authored rests.
-        if(melody[index]>=0 && character!=1 && character!=2)
-          melody[index]=std::max(0,std::min(4,int(melody[index])+(random()%2 ? 1 : -1)));
-      }
-    }
+    makeAnswer();
+    ++developments;
   }
   int melodyPitch(unsigned root,unsigned degree) const {
-    // Place the entire palette together: individual octave folding can invert a run.
-    return foldPitch(scaleNote(root,1),60,71)
-      + scaleNote(root+voicing[degree],1)-scaleNote(root,1);
+    return foldPitch(scaleNote(root+degree,0),60,91);
+  }
+  int supportPitch(unsigned root) const {
+    int best=previousSupport, distance=100;
+    for(unsigned d : {0u,2u,4u}) for(int octave=-1;octave<=1;++octave) {
+      int candidate=scaleNote(root+d,0)+12*octave;
+      int delta=std::abs(candidate-previousSupport);
+      if(candidate>=55 && candidate<=72 && delta<distance) {best=candidate;distance=delta;}
+    }
+    return best;
+  }
+  void beginPhrase() {
+    if(phraseCount>=developAt) {
+      developPhrase(); developAt=phraseCount+2+scoreRandom()%5;
+    }
+    if(phraseCount>=activityAt) {
+      activity=(activity+1+scoreRandom()%3)%4;
+      activityTarget=activity==0 ? 0.72f : activity==3 ? 0.55f : 1.0f;
+      activityAt=phraseCount+(activity==3 ? 1 : 2+scoreRandom()%5);
+    }
+    if(phraseCount>=harmonyAt) {
+      unsigned before=harmonicRoot;
+      if(harmonyStyle==1) harmonicRoot=harmonicRoot==0 ? 3+(homeRoot%3) : 0;
+      if(harmonyStyle==2) {
+        static const unsigned moves[]={2,3,4,5};
+        harmonicRoot=(harmonicRoot+moves[scoreRandom()%4])%7;
+      }
+      // Styles 0 and 3 retain a tonal center; 3 supports a recurring pedal.
+      harmonyChanges+=before!=harmonicRoot;
+      harmonyAt=phraseCount+2+scoreRandom()%6;
+    }
+    phraseLevel=0.5f*phraseLevel+0.5f*(0.94f+0.12f*performanceUnit());
+    if(activity!=3 && scoreUnit()<0.65f) {
+      previousSupport=harmonyStyle==3 ? foldPitch(scaleNote(0,0),55,67) : supportPitch(harmonicRoot);
+      note(previousSupport,2.1f,0.025f,2.075f,0.055f*phraseLevel*touchVariation(),brightness*0.65f);
+    }
+  }
+  void score() {
+    // Answering parts have their own recurrence, with a gap after lead attacks.
+    if(clock>=nextAnswer) {
+      if(clock-lastLeadAt<uint64_t(tickSamples/2)) {
+        nextAnswer=lastLeadAt+tickSamples/2;
+      } else {
+        if(activity==2 || (activity!=3 && scoreUnit()<0.48f)) {
+          unsigned d=unsigned(answer[answerStep]);
+          int pitch=foldPitch(melodyPitch(harmonicRoot,d)+12,72,91);
+          // Avoid a close semitone against a recently sounding lead note.
+          int interval=std::abs(pitch-lastLead)%12;
+          if(interval!=1 && interval!=11) {
+            note(pitch,decaySeconds*0.75f,strike,decaySeconds*0.75f-strike,
+                 0.045f*phraseLevel*touchVariation(),brightness*0.8f);
+            ++answersPlayed;
+          }
+        }
+        if(++answerStep<answerLength) nextAnswer+=uint64_t(tickSamples)*(1+scoreRandom()%3);
+        else {answerStep=0;nextAnswer+=uint64_t(tickSamples/2)*answerPeriod;}
+      }
+    }
+    if(clock<nextTick) return;
+    if(phraseStep==0) beginPhrase();
+    activityLevel+=0.25f*(activityTarget-activityLevel);
+    unsigned elapsed=0;
+    for(unsigned i=0;i<phraseStep;++i) elapsed+=rhythm[i];
+    float position=float(elapsed)/phraseTicks;
+    float expression=phraseLevel*(0.94f+0.12f*(4*position*(1-position)))*activityLevel;
+    int degree=melody[phraseStep];
+    bool speak=degree>=0;
+    if(activity==0 && phraseStep!=0 && phraseStep+1!=phraseLength && scoreUnit()<0.30f) speak=false;
+    if(activity==3 && phraseStep!=0 && phraseStep+1!=phraseLength) speak=false;
+    if(speak) {
+      int pitch=melodyPitch(harmonicRoot,unsigned(degree));
+      // Occasionally place the whole answering half in a different register.
+      if(character==3 && phraseCount%3==1 && phraseStep>=phraseLength/2)
+        pitch=foldPitch(pitch+12,72,91);
+      float duration=decaySeconds*(0.32f+0.18f*rhythm[phraseStep])*articulation[phraseStep]
+                     *(0.90f+0.20f*performanceUnit());
+      if(activity==2) duration*=0.8f;
+      duration=std::max(0.16f,std::min(3.8f,duration));
+      note(pitch,duration,strike,duration-strike,0.15f*accents[phraseStep]*expression*touchVariation(),brightness);
+      lastLead=pitch;lastLeadAt=clock;
+    }
+    nextTick+=uint64_t(tickSamples/2)*rhythm[phraseStep];
+    if(++phraseStep==phraseLength) {phraseStep=0;++phraseCount;}
   }
   static int foldPitch(int midi, int low, int high) {
     while (midi > high) midi -= 12;
@@ -342,18 +421,19 @@ class Engine {
   float currentFeedback() const { return feedbackNow; }
   float currentDelayMix() const { return mixNow; }
   unsigned tickFrames() const { return tickSamples; }
+  unsigned developmentCount() const { return developments; }
+  unsigned answerCount() const { return answersPlayed; }
+  unsigned harmonyChangeCount() const { return harmonyChanges; }
+  unsigned harmonicBehavior() const { return harmonyStyle; }
+  unsigned activityState() const { return activity; }
+  unsigned phraseSize() const { return phraseLength; }
   bool rhythmIsBalanced() const {
-    bool varied = false;
-    for (unsigned cell = 0; cell < phraseLength / 4; ++cell) {
-      unsigned sum = 0;
-      for (unsigned i = 0; i < 4; ++i) {
-        unsigned value = rhythm[cell * 4 + i];
-        if (value < 1 || value > 4) return false;
-        sum += value; varied |= value != 2;
-      }
-      if (sum != 8) return false;
+    unsigned sum=0;
+    for(unsigned i=0;i<phraseLength;++i) {
+      if(rhythm[i]<1 || rhythm[i]>40) return false;
+      sum+=rhythm[i];
     }
-    return varied && tickSamples % 2 == 0;
+    return sum==phraseTicks && phraseLength>=7 && phraseLength<=16 && tickSamples%2==0;
   }
   uint32_t patternHash() const {
     uint32_t hash = 2166136261u;
@@ -460,11 +540,11 @@ class Engine {
       }
       float crest=std::max(0.0f,(slow-.25f)/.75f);
       feedbackTarget=steppedFeedback ? heldFeedback : std::min(0.78f,feedback+feedbackDepth*slow+0.30f*crest*crest);
-      mixTarget=delayLevel+mixDepth*slower;
+      mixTarget=(delayLevel+mixDepth*slower)*(activity==2 ? 0.85f : 1.0f);
       toneTarget=0.36f+0.16f*slower;
       balanceTarget=0.5f+0.22f*slow;
       unsigned step=unsigned((clock-effectStart)/tickSamples)%8;
-      sendTarget=(sendMask & (1u<<step)) ? 1.0f : 0.0f;
+      sendTarget=(sendMask & (1u<<step)) ? (activity==2 ? 0.72f : 1.0f) : 0.0f;
     }
     // Smooth control motion, including the rhythmic send windows.
     feedbackNow+=(feedbackTarget-feedbackNow)*0.001f;
