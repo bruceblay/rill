@@ -1,6 +1,6 @@
 # Publishing Rill
 
-The initial repository contains the Study 16 source and build instructions. No versioned firmware release or M5Burner listing has been published by this preparation step.
+Release 0.1.0 packages the current StickS3 instrument. Store copy is in `release/m5burner-listing.md`; installation and source archive details are in `release/README.md`. Publication status is recorded below once verified.
 
 ## Source repository
 
