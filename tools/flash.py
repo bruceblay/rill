@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Copyright (c) 2026 Bruce Blay
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Build, upload and restart Still on an explicitly selected StickS3 port."""
+"""Build, upload and restart Rill on an explicitly selected StickS3 port."""
 import argparse
 import os
 from pathlib import Path

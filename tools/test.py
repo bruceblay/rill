@@ -19,7 +19,7 @@ def main():
     flags = ['-std=c++17', '-O2', '-Wall', '-Wextra', '-Werror', '-I', str(root / 'src')]
     if args.sanitize:
         flags += ['-fsanitize=address,undefined', '-fno-omit-frame-pointer']
-    with tempfile.TemporaryDirectory(prefix='still-tests-') as directory:
+    with tempfile.TemporaryDirectory(prefix='rill-tests-') as directory:
         for source in sorted((root / 'tests').glob('*_test.cpp')):
             target = Path(directory) / source.stem
             print(f'Testing {source.name}', flush=True)

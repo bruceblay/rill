@@ -1,6 +1,6 @@
 # Dependency notices
 
-Original Still code is copyright 2026 Bruce Blay, licensed under GPL version 3 or, at your option, any later version. The shake detector originated in Bruce's GPL-3.0-or-later Pocket Radio project. Other source in this repository was developed for Still; historical copies are retained under `studies/`.
+Original Rill code is copyright 2026 Bruce Blay, licensed under GPL version 3 or, at your option, any later version. The shake detector originated in Bruce's GPL-3.0-or-later Pocket Radio project. Other source in this repository was developed for Rill; historical copies are retained under `studies/`.
 
 | Build input | Pinned version | License/source reference |
 | --- | --- | --- |

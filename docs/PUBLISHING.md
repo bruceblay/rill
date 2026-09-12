@@ -1,4 +1,4 @@
-# Publishing Still
+# Publishing Rill
 
 The initial repository contains the Study 16 source and build instructions. No versioned firmware release or M5Burner listing has been published by this preparation step.
 
