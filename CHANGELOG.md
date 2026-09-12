@@ -1,5 +1,10 @@
 # Changes
 
+## Unreleased
+
+- Simplified the data-view title to RILL.
+- New musical generations also generate a new visual; shake remains visual-only.
+
 ## Initial repository — Study 16
 
 First standalone source publication candidate, collecting the on-device prototype developed through sixteen studies.

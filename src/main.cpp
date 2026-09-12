@@ -55,7 +55,7 @@ void draw() {
   d.fillScreen(0x1082);
   d.setTextColor(0xD692, 0x1082);
   d.setTextSize(3);
-  d.setCursor(16, 14); d.print("RILL 16");
+  d.setCursor(16, 14); d.print("RILL");
   d.drawFastHLine(16, 48, 208, 0x4208);
   d.setTextSize(2);
   uint32_t info = sceneInfo.load();
@@ -109,6 +109,7 @@ void loop() {
   if (M5.BtnA.wasHold()) { playing = !playing; changed = true; }
   static uint32_t lastScene = 0;
   uint32_t currentScene = sceneInfo.load();
+  const bool newMusic = lastScene != 0 && (currentScene >> 18) != (lastScene >> 18);
   if (currentScene != lastScene) { lastScene = currentScene; changed = true; }
   if (M5.BtnB.wasClicked()) {
     volume = volume >= 165 ? 45 : volume + 30;
@@ -116,7 +117,8 @@ void loop() {
     infoVisible = true; infoAt = now;
   }
   static uint32_t frameAt = 0;
-  if (repaintRequested.exchange(false)) { painting.regenerate(); infoVisible=false; frameAt=now-83; }
+  const bool newVisual = repaintRequested.exchange(false);
+  if (newMusic || newVisual) { painting.regenerate(); infoVisible=false; frameAt=now-83; }
   if (infoVisible && uint32_t(now - infoAt) >= 4000) infoVisible = false;
   static bool wasInfoVisible = false;
   if (!audioFailed) {

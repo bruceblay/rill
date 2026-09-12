@@ -12,12 +12,12 @@ Rill is an experimental instrument, currently at **Study 16**. It needs no Wi-Fi
 
 | Gesture | Action |
 | --- | --- |
-| Front button: tap | Generate a new musical piece and play |
+| Front button: tap | Generate a new musical piece, change the visual, and play |
 | Front button: hold for about 0.65 seconds | Fade sound out or in; the composition continues while quiet |
 | Side button: tap | Cycle volume and show the data view for four seconds |
 | Shake | Immediately switch to a different visual family and composition |
 
-The data view shows the voice, key, mode, generation number, tempo, delay rhythm, volume and battery estimate. Shake changes the visuals independently of the music. The gesture uses two acceleration peaks and a short cooldown; a single tilt is not a shake.
+The data view shows the voice, key, mode, generation number, tempo, delay rhythm, volume and battery estimate. New musical generations also select a new visual. Shake changes only the visual. The gesture uses two acceleration peaks and a short cooldown; a single tilt is not a shake.
 
 ## What it makes
 
