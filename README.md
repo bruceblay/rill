@@ -1,12 +1,14 @@
 # Rill
 
-A pocket-sized generative instrument for the **M5Stack StickS3**. Rill composes delicate, evolving music and animated artwork entirely on the device. Tap for a new piece. Shake for a new visual world.
+**rill** /rɪl/ *noun* — a small stream.
+
+A pocket-sized generative instrument for the **M5Stack StickS3**. Rill composes delicate, evolving music and animated artwork entirely on the device. Tap for a new piece. Shake for a new visual.
 
 <img src="docs/images/rill-scale.jpg" alt="Rill running on a StickS3 beside an AirPod for scale" width="640">
 
 *Rill on the StickS3, with an AirPod for scale.*
 
-Rill is an experimental instrument, currently at **Study 16**. It needs no Wi-Fi, account, audio files, or cloud service. Its sound has been developed around the StickS3's small built-in speaker.
+Rill is an experimental instrument. It needs no Wi-Fi, account, audio files, or cloud service. Its sound has been developed around the StickS3's small built-in speaker.
 
 ## Play
 
