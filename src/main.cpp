@@ -112,7 +112,7 @@ void loop() {
   const bool newMusic = lastScene != 0 && (currentScene >> 18) != (lastScene >> 18);
   if (currentScene != lastScene) { lastScene = currentScene; changed = true; }
   if (M5.BtnB.wasClicked()) {
-    volume = volume >= 165 ? 45 : volume + 30;
+    volume = volume >= 255 ? 45 : volume + 30;
     M5.Speaker.setVolume(volume); changed = true;
     infoVisible = true; infoAt = now;
   }

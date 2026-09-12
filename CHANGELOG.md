@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Extended the volume cycle through 76%, 88% and 100%, keeping the 64% startup level.
 - Simplified the data-view title to RILL.
 - New musical generations also generate a new visual; shake remains visual-only.
 
