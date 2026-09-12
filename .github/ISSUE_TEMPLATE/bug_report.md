@@ -8,7 +8,7 @@ about: Report unexpected behavior on a device or host build
 **What did you expect?**
 
 **Device and version**
-StickS3 / Still study or commit / build method:
+StickS3 / Rill study or commit / build method:
 
 **Steps to reproduce**
 Include a seed if using the host renderer.
