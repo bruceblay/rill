@@ -1,10 +1,12 @@
 # Changes
 
-## Unreleased
+## 0.2.0 — 2026-09-12
 
 - Replaced fixed eight-step motifs and rhythm cells with generated phrases and cumulative development.
 - Added independently timed sparse answers, changing activity, and sustained, pendulum, wandering or pedal harmony with nearby supporting chord tones.
 - Kept the existing synthesis voices and controls.
+
+## 0.1.0 — 2026-09-12
 
 - Extended the volume cycle through 76%, 88% and 100%, keeping the 64% startup level.
 - Simplified the data-view title to RILL.

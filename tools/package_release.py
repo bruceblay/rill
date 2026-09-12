@@ -10,10 +10,16 @@ import subprocess
 import sys
 
 root = Path(__file__).resolve().parents[1]
-version = sys.argv[1] if len(sys.argv) > 1 else '0.1.0'
+version = sys.argv[1] if len(sys.argv) > 1 else (root / 'VERSION').read_text().strip()
 if not version or any(c not in '0123456789.-abcdefghijklmnopqrstuvwxyz' for c in version):
     raise SystemExit('Invalid version')
 out = root / 'dist' / ('rill-' + version)
+if out.exists():
+    raise SystemExit(f'Release directory already exists: {out}')
+if subprocess.check_output(['git', 'status', '--porcelain'], cwd=root, text=True).strip():
+    raise SystemExit('Commit source changes before packaging a release.')
+# Build the recorded source before merging; a previous .pio output may be stale.
+subprocess.run([sys.executable, '-m', 'platformio', 'run', '-d', str(root)], check=True)
 out.mkdir(parents=True, exist_ok=False)
 core = Path.home() / '.platformio'
 framework = core / 'packages/framework-arduinoespressif32'

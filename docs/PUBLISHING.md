@@ -1,6 +1,6 @@
 # Publishing Rill
 
-Release 0.1.0 packages the current StickS3 instrument. Store copy is in `release/m5burner-listing.md`; installation and source archive details are in `release/README.md`. Publication status is recorded below once verified.
+Release 0.2.0 is the deployment candidate for the developing-phrase sequencer. Store copy is in `release/m5burner-listing.md`; installation and source archive details are in `release/README.md`. Publication status is recorded below once verified.
 
 ## Source repository
 
@@ -28,3 +28,9 @@ M5Burner distribution is a separate step: prepare a real device cover photo and 
 - Includes the expanded volume range approved after on-device listening. The startup level remains 64%.
 - Firmware build and release-commit CI passed; all release checksums verified locally.
 - M5Burner upload succeeded on September 12, 2026. Rill 0.1.0 is marked **Pending Public** (awaiting review), under StickS3 with Audio & Media and Display & Art categories. The selected cover is the six-visual montage (`docs/images/visuals.png`).
+
+## 0.2.0 deployment preparation
+
+The new sequencer passed all six host suites with address/undefined-behavior checks, including 256 initial contours and four sustained four-minute development runs. Firmware was flashed and approved through on-device listening. Device diagnostics recorded zero audio queue errors and 4.279 ms maximum rendering time per 16 ms audio block.
+
+Release files are built with `python tools/package_release.py` (version from `VERSION`). Packaging requires a clean commit and rebuilds before merging. Add the tagged source archive and dependency/source archives described in `release/README.md`, then regenerate SHA256SUMS. Use the factory image at offset 0x0 for M5Burner. Submit as a new version of the existing Rill listing.
