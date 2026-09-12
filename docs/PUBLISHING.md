@@ -34,3 +34,11 @@ M5Burner distribution is a separate step: prepare a real device cover photo and 
 The new sequencer passed all six host suites with address/undefined-behavior checks, including 256 initial contours and four sustained four-minute development runs. Firmware was flashed and approved through on-device listening. Device diagnostics recorded zero audio queue errors and 4.279 ms maximum rendering time per 16 ms audio block.
 
 Release files are built with `python tools/package_release.py` (version from `VERSION`). Packaging requires a clean commit and rebuilds before merging. Add the tagged source archive and dependency/source archives described in `release/README.md`, then regenerate SHA256SUMS. Use the factory image at offset 0x0 for M5Burner. Submit as a new version of the existing Rill listing.
+
+## 0.2.0 upload status — 2026-09-12
+
+- GitHub release 0.2.0 is public: https://github.com/bruceblay/rill/releases/tag/v0.2.0.
+- M5Burner rejected the new-version upload with `新增版本不能修改固件说明，请使用固件编辑接口` (new versions cannot modify the firmware description; use the firmware editor).
+- Matching the existing editor text and saving the desired description through the separate shared-data editor did not resolve the rejection. A temporary withdrawal of 0.1.0 was also ineffective; its Pending Public review status was restored and verified.
+- The shared description now documents the developing sequencer. The original visual montage cover was retained, as requested.
+- 0.2.0 has NOT been accepted by M5Burner. The Chrome upload form retains its firmware attachment and version notes for follow-up. Existing firmware id: 2098855058485760002.
