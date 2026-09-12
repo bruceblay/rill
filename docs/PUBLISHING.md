@@ -21,3 +21,10 @@ Release 0.1.0 packages the current StickS3 instrument. Store copy is in `release
 7. Create a draft release, then publish after reviewing those exact artifacts.
 
 M5Burner distribution is a separate step: prepare a real device cover photo and listing, confirm the uploader's current image format, and test installation through M5Burner before publishing there.
+
+## Release status — 2026-09-12
+
+- [Rill 0.1.0](https://github.com/bruceblay/rill/releases/tag/v0.1.0) is public, tagged at `acb96c5e15b4ae42beca8e7195472b40c4e18141`.
+- Includes the expanded volume range approved after on-device listening. The startup level remains 64%.
+- Firmware build and release-commit CI passed; all release checksums verified locally.
+- M5Burner submission is being prepared in the web developer portal; public listings require review.
