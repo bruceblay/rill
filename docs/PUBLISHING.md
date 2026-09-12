@@ -27,4 +27,4 @@ M5Burner distribution is a separate step: prepare a real device cover photo and 
 - [Rill 0.1.0](https://github.com/bruceblay/rill/releases/tag/v0.1.0) is public, tagged at `acb96c5e15b4ae42beca8e7195472b40c4e18141`.
 - Includes the expanded volume range approved after on-device listening. The startup level remains 64%.
 - Firmware build and release-commit CI passed; all release checksums verified locally.
-- M5Burner submission is being prepared in the web developer portal; public listings require review.
+- M5Burner upload succeeded on September 12, 2026. Rill 0.1.0 is marked **Pending Public** (awaiting review), under StickS3 with Audio & Media and Display & Art categories. The selected cover is the six-visual montage (`docs/images/visuals.png`).

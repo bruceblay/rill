@@ -3,7 +3,7 @@
 Version: 0.1.0
 Device: StickS3
 GitHub: https://github.com/bruceblay/rill
-Cover: docs/images/rill-rings.jpg
+Cover: docs/images/visuals.png
 
 ## Description
 
