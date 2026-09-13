@@ -103,8 +103,7 @@ Tests cover thirty simulated minutes of music, bounded output, key/register cons
 - `src/main.cpp` — audio, display, buttons and motion tasks
 - `src/ShakeDetector.h` — gesture recognition
 - `tools/` — portable tests, auditions, previews and flashing
-- `tests/` — host verification
-- `studies/` — selected historical snapshots used by regression checks
+- `tests/` — host verification, with required historical baselines in `fixtures/`
 
 See [publishing notes](docs/PUBLISHING.md), [changes](CHANGELOG.md), and [contributing](CONTRIBUTING.md).
 

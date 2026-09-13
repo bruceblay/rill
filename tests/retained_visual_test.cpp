@@ -1,7 +1,7 @@
 // Copyright (c) 2026 Bruce Blay
 // SPDX-License-Identifier: GPL-3.0-or-later
 #define light previous_light
-#include "../studies/15/Light.h"
+#include "fixtures/visuals-before.h"
 #undef light
 #include "../src/Light.h"
 #include <cassert>

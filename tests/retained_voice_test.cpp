@@ -1,10 +1,10 @@
 // Copyright (c) 2026 Bruce Blay
 // SPDX-License-Identifier: GPL-3.0-or-later
 #define garden previous
-#include "../studies/06/Garden.h"
+#include "fixtures/voices-before.h"
 #undef garden
 // Historical check for Study 07: Study 08 deliberately changes the wet mix.
-#include "../studies/07/Garden.h"
+#include "fixtures/voices-after.h"
 #include <memory>
 #include <cassert>
 #include <iostream>
